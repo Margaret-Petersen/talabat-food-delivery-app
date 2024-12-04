@@ -261,6 +261,8 @@ export const getConfiguration = `query GetConfiguration{
       isPaidVersion
       skipEmailVerification
       skipMobileVerification
+      costType
+      vapidKey
     }
   }`
 
@@ -345,6 +347,89 @@ export const getActiveOrders = `query GetActiveOrders($restaurantId:ID){
   }
 }`
 
+export const getActiveOrdersWithPagination = `query getActiveOrdersWithPagination( $page: Int, $rowsPerPage: Int, $search: String, $restaurantId: ID){
+  getActiveOrdersWithPagination( page: $page, rowsPerPage: $rowsPerPage, search: $search, restaurantId: $restaurantId)
+ {
+   orders 
+   {
+    _id
+    zone{
+      _id
+    }
+    orderId
+    restaurant{
+      _id
+      name
+      image
+      address
+      location{coordinates}
+    }
+    deliveryAddress{
+      location{coordinates}
+      deliveryAddress
+      details
+      label
+    }
+    items{
+      _id
+      title
+      description
+      image
+      quantity
+      variation{
+        _id
+        title
+        price
+        discounted
+      }
+      addons{
+        _id
+        options{
+          _id
+          title
+          description
+          price
+        }
+        description
+        title
+        quantityMinimum
+        quantityMaximum
+      }
+      specialInstructions
+      isActive
+      createdAt
+      updatedAt
+    }
+    user{
+      _id
+      name
+      phone
+      email
+    }
+    paymentMethod
+    paidAmount
+    orderAmount
+    orderStatus
+    isPickedUp
+    status
+    paymentStatus
+    reason
+    isActive
+    createdAt
+    deliveryCharges
+    rider{
+      _id
+      name
+      username
+      available
+    }
+   }
+    orderCount 
+    page
+    rowsPerPage
+  }
+}`
+
 export const getRidersByZone = `query RidersByZone($id:String!){
   ridersByZone(id:$id){
     _id
@@ -420,21 +505,42 @@ export const getTaxation = `query Taxes{
       }
     }`
 
-export const getCoupons = `query Coupons{
-    coupons {
-      _id
-      title
-      discount
-      enabled
+export const getCoupons = `
+  query Coupons($page: Int, $rowsPerPage: Int, $search: String) {
+    coupons(page: $page, rowsPerPage: $rowsPerPage, search: $search) {
+      coupons {
+        _id
+        title
+        discount
+        enabled
+      }
+        totalCount
     }
-  }`
-
-  export const getCuisines = `query Cuisines{
+    }
+  `
+export const getCuisines = `query Cuisines{
     cuisines {
       _id
       name
       description
+      image
+      shopType
     }
+  }`
+
+export const getBanners = `query Banners{
+    banners {
+      _id
+      title
+      description
+      action
+      screen
+      file
+      parameters
+    }
+  }`
+export const getBannerActions = `query BannerActions{
+    bannerActions
   }`
 
 export const getTipping = `query Tips{
@@ -502,27 +608,32 @@ export const restaurantList = `query RestaurantList{
   }
 }`
 
-export const restaurants = `query Restaurants{
-  restaurants{
-    _id
-    name
-    image
-    orderPrefix
-    slug
-    address
-    deliveryTime
-    minimumOrder
-    isActive
-    commissionRate
-    tax
-    owner{
-      _id
-      email
+export const restaurants = `
+  query Restaurants($page: Int, $rowsPerPage: Int, $search: String) {
+    restaurants(page: $page, rowsPerPage: $rowsPerPage, search: $search) {
+      restaurants {
+        _id
+        name
+        image
+        orderPrefix
+        slug
+        address
+        deliveryTime
+        minimumOrder
+        isActive
+        commissionRate
+        tax
+        owner {
+          _id
+          email
+        }
+        shopType
+      }
+      totalCount
     }
-    shopType
   }
-}
-`
+`;
+
 
 export const getRestaurantProfile = `query Restaurant($id:String){
       restaurant(id:$id)
@@ -533,6 +644,7 @@ export const getRestaurantProfile = `query Restaurant($id:String){
       slug
       name
       image
+      logo
       address
       location{coordinates}
       deliveryBounds{
@@ -639,31 +751,41 @@ query PageCount($restaurant:String!){
   pageCount(restaurant:$restaurant)
 }
 `
-export const getUsers = `query{
-    users{
-      _id
-      name
-      email
-      phone
-      addresses{
-        location{coordinates}
-        deliveryAddress
-      }
-    }
-  }`
-
-export const getRiders = `query{
-    riders{
-      _id
-      name
-      username
-      password
-      phone
-      available
-      zone{
+export const getUsers = `
+  query Users($page: Int, $rowsPerPage: Int, $search: String) {
+    users(page: $page, rowsPerPage: $rowsPerPage, search: $search) {
+      users {
         _id
-        title
+        name
+        email
+        phone
+        addresses {
+          location {
+            coordinates
+          }
+          deliveryAddress
+        }
       }
+      totalCount
+    }
+  }
+`;
+
+export const getRiders = `query Riders($page: Int, $rowsPerPage: Int, $search: String) {
+    riders(page: $page, rowsPerPage: $rowsPerPage, search: $search) {
+      riders {
+        _id
+        name
+        username
+        password
+        phone
+        available
+        zone {
+          _id
+          title
+        }
+      }
+      totalCount
     }
   }`
 
@@ -680,24 +802,22 @@ export const getAvailableRiders = `query{
     }
   }`
 
-export const withdrawRequestQuery = `query GetWithdrawRequests($offset:Int){
-      getAllWithdrawRequests(offset:$offset){
-          success
-          message
-          data{
-            _id
-            requestId
-            requestAmount
-            requestTime
-            rider{
-              _id
-              name
-              currentWalletAmount
-            }
-            status
-          }
-          pagination{
-            total
-          }
+export const withdrawRequestQuery = `
+  query GetWithdrawRequests($page: Int, $rowsPerPage: Int, $search: String) {
+    withdrawRequests(page: $page, rowsPerPage: $rowsPerPage, search: $search) {
+      requests {
+        _id
+        requestId
+        requestAmount
+        requestTime
+        rider {
+          _id
+          name
+          currentWalletAmount
+        }
+        status
       }
-  }`
+      totalCount
+    }
+  }
+`

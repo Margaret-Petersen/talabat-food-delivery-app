@@ -27,18 +27,48 @@ const Commission = () => {
   const { data, error: errorQuery, loading: loadingQuery } = useQuery(
     GET_RESTAURANTS
   )
-  console.log(data)
+
+  console.log("🚀 ~ Commission ~ data:", data)
+  
   const globalClasses = useGlobalStyles()
   const classes = useStyles()
   const { t } = useTranslation()
   const handleSuccessButtonClick = () => {
-    NotificationManager.success('Update Successful', 'Commission Rates', 3000, {
+    NotificationManager.success(
+      t('UpdateSuccessful'),
+      t('CommissionRates'),
+      3000,
+      {
+        className: 'customNotification'
+      }
+    )
+  }
+  const handleErrorButtonClick = () => {
+    NotificationManager.error(t('Update Error'), t('Commission Rates'), 3000, {
       className: 'customNotification'
     })
   }
-  const handleErrorButtonClick = () => {
-    NotificationManager.error('Update Error', 'Commission Rates', 3000, {
-      className: 'customNotification'
+
+  const handleSaveButtonClick = id => {
+    const result = getValues(id)
+
+    // Validate commissionRate to ensure it's not negative
+    if (result.commissionRate < 0) {
+      NotificationManager.error(
+        t('The value Should not be in the negative'),
+        t('Commission Rates'),
+        3000,
+        {
+          className: 'customNotification'
+        }
+      )
+      return
+    }
+
+    mutate({
+      variables: result,
+      onCompleted: handleSuccessButtonClick,
+      onError: handleErrorButtonClick
     })
   }
 
@@ -62,7 +92,7 @@ const Commission = () => {
                 ) : (
                   data && (
                     <>
-                      {data.restaurants.map(restaurant => (
+                      {data.restaurants.restaurants.map(restaurant => (
                         <Grid key={restaurant._id} container spacing={1}>
                           <Grid item sm={5} mt={3}>
                             {restaurant.name}
@@ -82,15 +112,7 @@ const Commission = () => {
                           <Grid item sm={3}>
                             <Button
                               className={globalClasses.button}
-                              onClick={() => {
-                                const result = getValues(restaurant._id)
-                                mutate({
-                                  variables: result,
-                                  onCompleted: data => {
-                                    handleSuccessButtonClick()
-                                  }
-                                })
-                              }}>
+                              onClick={() => handleSaveButtonClick(restaurant._id)}>
                               {t('Save')}
                             </Button>
                             {error && <span>{error.message}</span>}
